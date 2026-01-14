@@ -1,0 +1,45 @@
+# Requirements for AI Chatbot Backend
+# Specifies compatible versions to avoid dependency conflicts
+
+# Core FastAPI framework
+fastapi==0.115.4
+uvicorn[standard]==0.32.1
+
+# Database and ORM
+sqlmodel==0.0.22
+sqlalchemy==2.0.36
+psycopg==3.2.3
+psycopg-binary==3.2.3
+
+# OpenAI and MCP Integration
+openai==1.55.0
+agents-mcp==0.1.0
+
+# Authentication
+better-auth==0.0.1-beta.99
+
+# Type hints and utilities
+pydantic==2.10.1
+pydantic-settings==2.7.0
+
+# HTTP handling
+httpx==0.28.1
+requests==2.32.3
+
+# Async support
+anyio==4.6.2.post1
+asyncpg==0.30.0
+
+# JSON handling
+orjson==3.10.12
+
+# Environment variables
+python-dotenv==1.0.1
+
+# Testing (optional)
+pytest==8.3.4
+pytest-asyncio==0.25.0
+
+# Development tools
+black==24.10.0
+mypy==1.13.0
