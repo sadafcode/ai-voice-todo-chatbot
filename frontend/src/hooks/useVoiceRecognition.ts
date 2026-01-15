@@ -8,7 +8,10 @@ import {
 import {
   VoiceRecognitionConfig,
   UseVoiceRecognitionReturn,
-  SpeechRecognitionErrorCode
+  SpeechRecognitionErrorCode,
+  SpeechRecognition,
+  SpeechRecognitionEvent,
+  SpeechRecognitionErrorEvent
 } from '../types/speech';
 
 /**
@@ -31,7 +34,7 @@ export function useVoiceRecognition(config: VoiceRecognitionConfig): UseVoiceRec
   const [detectedLanguage, setDetectedLanguage] = useState<'en' | 'ur' | null>(null);
 
   // Reference to store the SpeechRecognition instance
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   // Reference to store the timeout ID for auto-send
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -48,23 +51,23 @@ export function useVoiceRecognition(config: VoiceRecognitionConfig): UseVoiceRec
   useEffect(() => {
     if (isSupported) {
       // Get the appropriate constructor (webkit prefix for older browsers)
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
+      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognitionAPI() as SpeechRecognition;
 
       // Configure the recognition
-      recognitionRef.current.continuous = false;        // Stop after user finishes speaking
-      recognitionRef.current.interimResults = true;     // Show partial results
-      recognitionRef.current.maxAlternatives = 1;       // Single best result
-      recognitionRef.current.lang = getLanguageCode(config.language); // Set initial language
+      recognition.continuous = false;        // Stop after user finishes speaking
+      recognition.interimResults = true;     // Show partial results
+      recognition.maxAlternatives = 1;       // Single best result
+      recognition.lang = getLanguageCode(config.language); // Set initial language
 
       // Set up event handlers
-      recognitionRef.current.onstart = () => {
+      recognition.onstart = () => {
         setIsRecording(true);
         setIsTranscribing(true);
         setError(null);
       };
 
-      recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         let interimTranscript = '';
         let finalTranscript = '';
 
@@ -97,7 +100,7 @@ export function useVoiceRecognition(config: VoiceRecognitionConfig): UseVoiceRec
         }
       };
 
-      recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         setIsRecording(false);
         setIsTranscribing(false);
 
@@ -107,10 +110,13 @@ export function useVoiceRecognition(config: VoiceRecognitionConfig): UseVoiceRec
         setError(errorMessage);
       };
 
-      recognitionRef.current.onend = () => {
+      recognition.onend = () => {
         setIsRecording(false);
         setIsTranscribing(false);
       };
+
+      // Store reference
+      recognitionRef.current = recognition;
 
       // Clean up function
       return () => {

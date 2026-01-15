@@ -5,9 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { authFetch, handleResponse } from '@/lib/api';
 
-// Import the chatbot component from the skills directory
-import { TodoChatBot } from '../../../.claude/skills/ai-chatbot-frontend';
-
 // Import voice recognition hook and utilities
 import { useVoiceRecognition } from '../../hooks/useVoiceRecognition';
 import { detectLanguage, getTextDirection } from '../../utils/languageDetection';
@@ -17,7 +14,7 @@ const ChatPage = () => {
   const router = useRouter();
 
   // State for chat functionality
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<Array<{id: number; text: string; sender: 'user' | 'bot'; timestamp: string}>>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [language, setLanguage] = useState<'en' | 'ur'>('en'); // Language selector state
@@ -79,7 +76,7 @@ const ChatPage = () => {
       const userMessage = {
         id: Date.now(),
         text: messageToSend,
-        sender: 'user',
+        sender: 'user' as const,
         timestamp: new Date().toISOString()
       };
 
@@ -94,12 +91,13 @@ const ChatPage = () => {
       });
 
       const data = await handleResponse(response);
+      const responseData = data as {response: string};
 
       // Add bot response to UI
       const botMessage = {
         id: Date.now() + 1,
-        text: data.response,
-        sender: 'bot',
+        text: responseData.response,
+        sender: 'bot' as const,
         timestamp: new Date().toISOString()
       };
 
@@ -109,7 +107,7 @@ const ChatPage = () => {
       const errorMessage = {
         id: Date.now() + 1,
         text: 'Sorry, I encountered an error processing your request.',
-        sender: 'bot',
+        sender: 'bot' as const,
         timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -137,7 +135,7 @@ const ChatPage = () => {
   };
 
   // Handle pressing Enter to send message
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -168,8 +166,11 @@ const ChatPage = () => {
   // Show loading state while checking authentication
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-700 text-xl">Loading chat...</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+          <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>Loading chat...</p>
+        </div>
       </div>
     );
   }
@@ -177,24 +178,25 @@ const ChatPage = () => {
   // If not authenticated, show a message (should redirect automatically)
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-red-500 text-xl">Not authenticated. Redirecting...</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+        <p className="text-red-400 text-xl">Not authenticated. Redirecting...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="min-h-screen p-4 md:p-8" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className={`text-4xl font-bold text-gray-800 ${language === 'ur' ? 'font-urdu' : ''}`}>
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className={`text-3xl md:text-4xl font-bold text-gradient glow-text ${language === 'ur' ? 'font-urdu' : ''}`}>
             {language === 'en' ? 'AI Task Assistant' : 'اے آئی ٹاسک اسسٹنٹ'}
           </h1>
 
           {/* Language Selector */}
           <button
             onClick={toggleLanguage}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-150 shadow-md"
+            className="btn-language"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
@@ -205,44 +207,51 @@ const ChatPage = () => {
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className={`mb-4 ${language === 'ur' ? 'text-right font-urdu' : ''}`} dir={language === 'ur' ? 'rtl' : 'ltr'}>
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">
+        {/* Main Card */}
+        <div className="card-dark-elevated p-6">
+          {/* Instructions */}
+          <div className={`mb-6 ${language === 'ur' ? 'text-right font-urdu' : ''}`} dir={language === 'ur' ? 'rtl' : 'ltr'}>
+            <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
               {language === 'en'
                 ? 'Chat with your AI Task Assistant'
                 : 'اپنے اے آئی ٹاسک اسسٹنٹ سے بات کریں'}
             </h2>
-            <p className="text-gray-600">
+            <p style={{ color: 'var(--text-secondary)' }}>
               {language === 'en'
                 ? 'Manage your tasks using natural language. Try commands like:'
                 : 'قدرتی زبان استعمال کرتے ہوئے اپنے کاموں کو منظم کریں۔ ان کمانڈز کو آزمائیں:'}
             </p>
-            <ul className="text-sm text-gray-500 mt-1 space-y-1">
+            <ul className="text-sm mt-2 space-y-1" style={{ color: 'var(--text-muted)' }}>
               {language === 'en' ? (
                 <>
-                  <li>• "Add a task to buy groceries"</li>
-                  <li>• "Show me my tasks"</li>
-                  <li>• "Update dentist task to tomorrow urgent"</li>
-                  <li>• "Complete task 1"</li>
-                  <li>• "Delete the meeting task"</li>
+                  <li className="flex items-center gap-2"><span className="text-blue-400">•</span> "Add a task to buy groceries"</li>
+                  <li className="flex items-center gap-2"><span className="text-blue-400">•</span> "Show me my tasks"</li>
+                  <li className="flex items-center gap-2"><span className="text-blue-400">•</span> "Update dentist task to tomorrow urgent"</li>
+                  <li className="flex items-center gap-2"><span className="text-blue-400">•</span> "Complete task 1"</li>
+                  <li className="flex items-center gap-2"><span className="text-blue-400">•</span> "Delete the meeting task"</li>
                 </>
               ) : (
                 <>
-                  <li>• "گروسری خریدنے کا کام شامل کریں"</li>
-                  <li>• "میرے کام دکھائیں"</li>
-                  <li>• "ڈینٹسٹ کا کام کل کے لیے فوری بنائیں"</li>
-                  <li>• "کام نمبر 1 مکمل کریں"</li>
-                  <li>• "میٹنگ کا کام حذف کریں"</li>
+                  <li className="flex items-center gap-2 justify-end"><span>"گروسری خریدنے کا کام شامل کریں"</span><span className="text-blue-400">•</span></li>
+                  <li className="flex items-center gap-2 justify-end"><span>"میرے کام دکھائیں"</span><span className="text-blue-400">•</span></li>
+                  <li className="flex items-center gap-2 justify-end"><span>"ڈینٹسٹ کا کام کل کے لیے فوری بنائیں"</span><span className="text-blue-400">•</span></li>
+                  <li className="flex items-center gap-2 justify-end"><span>"کام نمبر 1 مکمل کریں"</span><span className="text-blue-400">•</span></li>
+                  <li className="flex items-center gap-2 justify-end"><span>"میٹنگ کا کام حذف کریں"</span><span className="text-blue-400">•</span></li>
                 </>
               )}
             </ul>
           </div>
 
           {/* Chat Interface */}
-          <div className="border rounded-lg p-4 mb-4 bg-gray-50 h-96 overflow-y-auto relative">
+          <div className="chat-container p-4 mb-4 h-96 overflow-y-auto scrollbar-dark relative">
             {messages.length === 0 ? (
-              <div className={`h-full flex items-center justify-center text-gray-500 ${language === 'ur' ? 'font-urdu' : ''}`}>
-                <p>{language === 'en' ? 'Start chatting with your AI Task Assistant...' : 'اپنے اے آئی ٹاسک اسسٹنٹ کے ساتھ بات شروع کریں...'}</p>
+              <div className={`h-full flex items-center justify-center ${language === 'ur' ? 'font-urdu' : ''}`} style={{ color: 'var(--text-muted)' }}>
+                <div className="text-center">
+                  <svg className="w-16 h-16 mx-auto mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  <p>{language === 'en' ? 'Start chatting with your AI Task Assistant...' : 'اپنے اے آئی ٹاسک اسسٹنٹ کے ساتھ بات شروع کریں...'}</p>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -253,10 +262,10 @@ const ChatPage = () => {
                   return (
                     <div
                       key={msg.id}
-                      className={`p-3 rounded-lg max-w-3/4 ${
+                      className={`p-4 max-w-[80%] animate-message-in ${
                         msg.sender === 'user'
-                          ? 'bg-blue-500 text-white ml-auto'
-                          : 'bg-gray-200 text-gray-800'
+                          ? 'message-user ml-auto'
+                          : 'message-bot'
                       } ${isUrdu ? 'font-urdu' : ''}`}
                       dir={msgDirection}
                     >
@@ -264,9 +273,10 @@ const ChatPage = () => {
                         <span className="whitespace-pre-wrap text-base leading-relaxed">{msg.text}</span>
                       </div>
                       <div
-                        className={`text-xs mt-1 ${
-                          msg.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
+                        className={`text-xs mt-2 ${
+                          msg.sender === 'user' ? 'text-blue-200/70' : ''
                         }`}
+                        style={{ color: msg.sender === 'bot' ? 'var(--text-muted)' : undefined }}
                         dir="ltr"
                       >
                         {new Date(msg.timestamp).toLocaleTimeString()}
@@ -275,13 +285,13 @@ const ChatPage = () => {
                   );
                 })}
                 {isLoading && (
-                  <div className={`p-3 rounded-lg bg-gray-200 text-gray-800 ${language === 'ur' ? 'font-urdu' : ''}`} dir={language === 'ur' ? 'rtl' : 'ltr'}>
-                    <div className="flex items-center">
-                      <span>{language === 'en' ? 'AI is thinking...' : 'اے آئی سوچ رہا ہے...'}</span>
-                      <div className={`${language === 'ur' ? 'mr-2' : 'ml-2'} flex space-x-1`}>
-                        <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce delay-75"></div>
-                        <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce delay-150"></div>
+                  <div className={`message-bot p-4 inline-block ${language === 'ur' ? 'font-urdu' : ''}`} dir={language === 'ur' ? 'rtl' : 'ltr'}>
+                    <div className="flex items-center gap-2">
+                      <span style={{ color: 'var(--text-secondary)' }}>{language === 'en' ? 'AI is thinking' : 'اے آئی سوچ رہا ہے'}</span>
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 rounded-full animate-thinking-dot" style={{ background: 'var(--accent-primary)' }}></div>
+                        <div className="w-2 h-2 rounded-full animate-thinking-dot-delay-1" style={{ background: 'var(--accent-primary)' }}></div>
+                        <div className="w-2 h-2 rounded-full animate-thinking-dot-delay-2" style={{ background: 'var(--accent-primary)' }}></div>
                       </div>
                     </div>
                   </div>
@@ -293,47 +303,49 @@ const ChatPage = () => {
 
           {/* Voice Error Display */}
           {voiceError && (
-            <div className={`mb-2 p-3 bg-red-100 border border-red-300 rounded-lg flex justify-between items-start ${
+            <div className={`status-error mb-3 p-3 flex justify-between items-start ${
               language === 'ur' ? 'font-urdu' : ''
             }`} dir={language === 'ur' ? 'rtl' : 'ltr'}>
-              <span className="text-red-700">{voiceError}</span>
+              <span>{voiceError}</span>
               <button
                 onClick={() => setVoiceError(null)}
-                className="ml-2 text-red-700 hover:text-red-900"
+                className="ml-2 hover:text-red-300 transition-colors"
                 aria-label={language === 'en' ? 'Dismiss error' : 'غلطی کو ختم کریں'}
               >
-                ×
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           )}
 
           {/* Recording Indicator */}
           {voiceRecognition.isRecording && (
-            <div className={`mb-2 p-2 bg-red-500 text-white rounded-lg flex items-center ${
-              language === 'ur' ? 'font-urdu text-right' : ''
-            } animate-pulse`} dir={language === 'ur' ? 'rtl' : 'ltr'}>
-              <div className="w-3 h-3 bg-white rounded-full mr-2 animate-pulse"></div>
-              <span>{language === 'en' ? 'Listening...' : 'سن رہا ہے...'}</span>
+            <div className={`mb-3 p-3 rounded-xl flex items-center gap-3 animate-recording ${
+              language === 'ur' ? 'font-urdu' : ''
+            }`} style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)' }} dir={language === 'ur' ? 'rtl' : 'ltr'}>
+              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-red-400">{language === 'en' ? 'Listening...' : 'سن رہا ہے...'}</span>
             </div>
           )}
 
           {/* Transcription Preview */}
           {voiceRecognition.transcript && (
-            <div className={`mb-2 p-3 bg-blue-100 border border-blue-300 rounded-lg ${
-              language === 'ur' ? 'font-urdu text-right' : ''
+            <div className={`status-info mb-3 p-3 ${
+              language === 'ur' ? 'font-urdu' : ''
             }`} dir={getTextDirection(voiceRecognition.transcript)}>
-              <span className="text-blue-800">{voiceRecognition.transcript}</span>
+              <span>{voiceRecognition.transcript}</span>
             </div>
           )}
 
           {/* Message Input */}
-          <div className={`flex ${language === 'ur' ? 'flex-row-reverse' : ''} gap-2`}>
+          <div className={`flex ${language === 'ur' ? 'flex-row-reverse' : ''} gap-3`}>
             <textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={language === 'en' ? 'Type your message here...' : 'یہاں اپنا پیغام لکھیں...'}
-              className={`flex-1 border border-gray-600 rounded-lg p-3 resize-none h-16 bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`input-dark flex-1 p-4 resize-none h-14 ${
                 language === 'ur' ? 'font-urdu text-right' : ''
               }`}
               dir={language === 'ur' ? 'rtl' : 'ltr'}
@@ -351,15 +363,9 @@ const ChatPage = () => {
                   }
                 }}
                 disabled={isLoading}
-                className={`w-12 h-12 flex items-center justify-center rounded-lg transition duration-150 ${
-                  voiceRecognition.isRecording
-                    ? 'bg-red-500 hover:bg-red-600'
-                    : voiceRecognition.isTranscribing
-                      ? 'bg-blue-500 hover:bg-blue-600'
-                      : 'bg-gray-200 hover:bg-gray-300'
-                } ${(isLoading || !voiceRecognition.isSupported) ? 'opacity-50 cursor-not-allowed' : ''} ${
-                  language === 'ur' ? 'font-urdu' : ''
-                }`}
+                className={`btn-icon w-14 h-14 ${
+                  voiceRecognition.isRecording ? 'btn-recording' : ''
+                } ${voiceRecognition.isTranscribing ? 'animate-glow-pulse' : ''}`}
                 aria-label={
                   voiceRecognition.isRecording
                     ? (language === 'en' ? 'Stop recording' : 'ریکارڈنگ بند کریں')
@@ -368,7 +374,8 @@ const ChatPage = () => {
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className={`h-6 w-6 ${voiceRecognition.isRecording ? 'text-white' : 'text-gray-700'}`}
+                  className={`h-6 w-6 transition-colors ${voiceRecognition.isRecording ? 'text-white' : ''}`}
+                  style={{ color: voiceRecognition.isRecording ? 'white' : 'var(--text-secondary)' }}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -386,27 +393,17 @@ const ChatPage = () => {
             <button
               onClick={sendMessage}
               disabled={isLoading || !inputMessage.trim()}
-              className={`px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`btn-primary px-6 h-14 flex items-center gap-2 ${
                 language === 'ur' ? 'font-urdu' : ''
               }`}
             >
-              {language === 'en' ? 'Send' : 'بھیجیں'}
+              <span>{language === 'en' ? 'Send' : 'بھیجیں'}</span>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
             </button>
           </div>
         </div>
-
-        {/* Alternative ChatBot Component (if we wanted to use the skill component) */}
-        {/*
-        <div className="mt-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Alternative Chat Interface</h2>
-          <TodoChatBot config={{
-            apiEndpoint: `/api/${user?.id}/chat`,
-            domainKey: 'todo-app',
-            theme: 'light',
-            className: 'w-full max-w-2xl'
-          }} />
-        </div>
-        */}
       </div>
     </div>
   );

@@ -2,11 +2,16 @@
  * TypeScript interfaces for Web Speech API and voice recognition hook
  */
 
+// Constructor type for SpeechRecognition
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition;
+}
+
 // Extend the global Window interface to include SpeechRecognition
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: SpeechRecognitionConstructor;
+    webkitSpeechRecognition: SpeechRecognitionConstructor;
   }
 }
 
@@ -95,5 +100,51 @@ export type SpeechRecognitionErrorCode =
   | 'network'            // Network error
   | 'aborted'            // User aborted
   | 'not-supported';     // Browser doesn't support feature
+
+// Define types for Web Speech API
+export interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onstart: (event: Event) => void;
+  onend: (event: Event) => void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onnomatch: (event: Event) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onspeechstart: (event: Event) => void;
+  onspeechend: (event: Event) => void;
+}
+
+export interface SpeechRecognitionEvent extends Event {
+  readonly resultIndex: number;
+  readonly results: SpeechRecognitionResultList;
+}
+
+export interface SpeechRecognitionResultList {
+  readonly length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+export interface SpeechRecognitionResult {
+  readonly isFinal: boolean;
+  readonly length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+export interface SpeechRecognitionAlternative {
+  readonly transcript: string;
+  readonly confidence: number;
+}
+
+export interface SpeechRecognitionErrorEvent extends Event {
+  readonly error: SpeechRecognitionErrorCode;
+  readonly message: string;
+}
 
 export {};

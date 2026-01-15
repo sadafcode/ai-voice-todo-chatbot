@@ -33,19 +33,31 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold text-center">Sign Up</h1>
-        
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#0F172A' }}>
+      <div
+        className="max-w-md w-full space-y-8 p-8 rounded-2xl"
+        style={{
+          background: '#111827',
+          border: '1px solid #1E293B',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)'
+        }}
+      >
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gradient glow-text">Sign Up</h1>
+          <p className="mt-2 text-sm" style={{ color: '#9CA3AF' }}>
+            Create your TaskMaster account
+          </p>
+        </div>
+
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="status-error px-4 py-3">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium mb-2" style={{ color: '#E5E7EB' }}>
               Name
             </label>
             <input
@@ -53,13 +65,13 @@ export default function SignupPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="input-dark w-full px-4 py-3"
               placeholder="Your full name"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium mb-2" style={{ color: '#E5E7EB' }}>
               Email
             </label>
             <input
@@ -67,13 +79,13 @@ export default function SignupPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="input-dark w-full px-4 py-3"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium mb-2" style={{ color: '#E5E7EB' }}>
               Password
             </label>
             <input
@@ -82,7 +94,7 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="input-dark w-full px-4 py-3"
               placeholder="At least 8 characters"
             />
           </div>
@@ -90,15 +102,22 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={authLoading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            className="btn-primary w-full py-3 text-base"
           >
-            {authLoading ? 'Signing up...' : 'Sign Up'}
+            {authLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Signing up...
+              </span>
+            ) : (
+              'Sign Up'
+            )}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-600">
+        <p className="text-center text-sm" style={{ color: '#9CA3AF' }}>
           Already have an account?{' '}
-          <Link href="/login" className="font-medium text-blue-600 hover:underline">
+          <Link href="/login" className="font-medium hover:underline" style={{ color: '#38BDF8' }}>
             Log in
           </Link>
         </p>

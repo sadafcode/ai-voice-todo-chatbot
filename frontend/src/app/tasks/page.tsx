@@ -153,8 +153,11 @@ const TaskListPage: React.FC = () => {
   // Show a global loading state while AuthContext is still loading
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-700 text-xl">Loading authentication...</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+          <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>Loading authentication...</p>
+        </div>
       </div>
     )
   }
@@ -164,35 +167,52 @@ const TaskListPage: React.FC = () => {
   // If for some reason it is, show a message.
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-red-500 text-xl">Not authenticated. Redirecting...</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+        <p className="text-red-400 text-xl">Not authenticated. Redirecting...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="min-h-screen p-4 md:p-8" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">My Tasks {user?.name ? `for ${user.name}` : ''}</h1> {/* Display user name */}
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold text-gradient glow-text">
+            My Tasks {user?.name ? `for ${user.name}` : ''}
+          </h1>
+
+          {/* AI Chat Button */}
+          <button
+            onClick={() => router.push('/chat')}
+            className="btn-primary flex items-center gap-2 px-5 py-3"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <span>AI Chat</span>
+          </button>
+        </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="status-error px-4 py-3 mb-4">
             {error}
           </div>
         )}
 
-        <div className="flex justify-between items-center mb-6">
+        {/* Action Bar */}
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
           <button
             onClick={() => {
               setShowForm(!showForm)
               setEditingTask(null)
             }}
-            className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition duration-150"
+            className="btn-primary px-6 py-2.5"
           >
             {showForm ? 'Cancel Add' : 'Add New Task'}
           </button>
 
-          <div className="flex space-x-4">
+          <div className="flex flex-wrap gap-3">
             {/* Filter by Status */}
             <div>
               <label htmlFor="filterStatus" className="sr-only">Filter by Status</label>
@@ -200,7 +220,7 @@ const TaskListPage: React.FC = () => {
                 id="filterStatus"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                className="input-dark px-3 py-2 text-sm min-w-[140px]"
                 disabled={loadingTasks}
               >
                 <option value="all">All Statuses</option>
@@ -216,7 +236,7 @@ const TaskListPage: React.FC = () => {
                 id="sortOrder"
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
-                className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                className="input-dark px-3 py-2 text-sm min-w-[140px]"
                 disabled={loadingTasks}
               >
                 <option value="created_at">Created Date</option>
@@ -232,7 +252,7 @@ const TaskListPage: React.FC = () => {
                 id="sortDirection"
                 value={sortDirection}
                 onChange={(e) => setSortDirection(e.target.value)}
-                className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                className="input-dark px-3 py-2 text-sm min-w-[130px]"
                 disabled={loadingTasks}
               >
                 <option value="asc">Ascending</option>
@@ -243,8 +263,8 @@ const TaskListPage: React.FC = () => {
         </div>
 
         {showForm && (
-          <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+          <div className="card-dark p-6 mb-8">
+            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
               {editingTask ? 'Edit Task' : 'Add New Task'}
             </h2>
             <TaskForm
@@ -261,11 +281,20 @@ const TaskListPage: React.FC = () => {
         )}
 
         {loadingTasks && !tasks.length && (
-          <p className="text-center text-gray-600 text-lg">Loading tasks...</p>
+          <div className="text-center py-12">
+            <div className="w-10 h-10 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+            <p style={{ color: 'var(--text-secondary)' }}>Loading tasks...</p>
+          </div>
         )}
 
         {!loadingTasks && tasks.length === 0 && !error && (
-          <p className="text-center text-gray-600 text-lg">No tasks found. Add one above!</p>
+          <div className="card-dark p-12 text-center">
+            <svg className="w-16 h-16 mx-auto mb-4 opacity-30" style={{ color: 'var(--text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            <p className="text-lg" style={{ color: 'var(--text-muted)' }}>No tasks found. Add one above!</p>
+            <p className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>Or use the AI Chat to manage tasks with natural language</p>
+          </div>
         )}
 
         <div className="space-y-4">
@@ -285,14 +314,37 @@ const TaskListPage: React.FC = () => {
           ))}
         </div>
 
-        {/* Logout button */}
-        <div className="mt-8 text-center">
-            <button
-                onClick={logout}
-                className="px-6 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 transition duration-150"
-            >
-                Logout
-            </button>
+        {/* Footer Actions */}
+        <div className="mt-8 flex justify-center gap-4">
+          <button
+            onClick={() => router.push('/chat')}
+            className="btn-icon px-6 py-2.5 flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <span style={{ color: 'var(--text-primary)' }}>Open AI Chat</span>
+          </button>
+
+          <button
+            onClick={logout}
+            className="px-6 py-2.5 rounded-xl font-medium transition-all duration-200"
+            style={{
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              color: '#fca5a5'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)';
+              e.currentTarget.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            Logout
+          </button>
         </div>
       </div>
     </div>

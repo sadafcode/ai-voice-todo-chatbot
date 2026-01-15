@@ -1,251 +1,244 @@
-# Phase 3: AI-Powered Todo Chatbot (Spec-Driven Development)
+# Phase III: Todo AI Chatbot with MCP Integration
 
-A modern, full-stack AI-powered task management application built with Next.js 14, FastAPI, and OpenAI Agents SDK using spec-driven development methodology.
+AI-powered chatbot interface for managing todos through natural language using MCP (Model Context Protocol) server architecture.
 
-## 🏗️ Spec-Driven Development Approach
+---
 
-This project follows the Spec-Driven Development (SDD) methodology:
-- **Specifications-first**: All features are specified before implementation
-- **Reusable Skills**: Modular, reusable components and functions
-- **Constitution-Governed**: Project principles documented in specs/constitution.md
-- **AI-Assisted Development**: Leveraging Claude AI for development with .claude configuration
+## 🎯 Project Evolution
 
-## 🚀 Features
+### Phase I - Core Features
+- User Authentication (JWT + bcrypt)
+- Task CRUD operations
+- Task filtering & sorting
+- User data isolation
 
-### Phase 3 - AI-Powered Chatbot Interface ✅
+### Phase II - Enhanced UX
+- Landing page with navigation
+- Auto-login after signup
+- Smart redirects
+- Improved error messages
 
-- **Natural Language Task Management**: Users can manage tasks using conversational language
-- **Multi-language Support**: Full support for English and Urdu languages
-- **Voice Commands**: Voice input functionality for todo commands
-- **MCP Server Integration**: Model Context Protocol for standardized AI tool interactions
-- **OpenAI Agents SDK**: Advanced AI processing with MCP tool integration
-- **Stateless Chat Architecture**: Database-persisted conversation state with scalable design
-- **Calm Productivity Theme**: Modern UI with dark mode support
-- **Seamless Integration**: Maintains all Phase II features with enhanced AI capabilities
+### Phase III - AI Chatbot (Current)
+- Natural language task management
+- OpenAI Agents SDK integration
+- MCP Server with 5 tools
+- Bilingual support (English + Urdu)
+- Voice commands (Web Speech API)
+- Stateless chat architecture
 
-### Phase 2 - Enhanced Auth Flow & UI Improvements ✅
+---
 
-- **Beautiful Landing Page**: Welcoming homepage with clear navigation to signup/login
-- **Auto-Login After Signup**: Users are automatically logged in after successful registration
-- **Smart Redirects**: Authenticated users are automatically redirected to tasks from auth pages
-- **Enhanced Error Messages**: Clear, actionable error feedback from the backend
-- **Improved UI Readability**: Dark text inputs with helpful placeholders
-- **Seamless User Experience**: Intuitive flow from landing → signup → tasks
+## 🛠️ Technology Stack
 
-### Core Features (Phase 1)
+| Component | Technology |
+|-----------|------------|
+| Frontend | OpenAI ChatKit |
+| Backend | Python FastAPI |
+| AI Framework | OpenAI Agents SDK |
+| MCP Server | Official MCP SDK |
+| ORM | SQLModel |
+| Database | Neon Serverless PostgreSQL |
+| Authentication | Better Auth |
 
-- **User Authentication**: Secure JWT-based auth with bcrypt password hashing
-- **Task Management**: Full CRUD operations for tasks
-- **Task Filtering**: Filter by status (all, pending, completed)
-- **Task Sorting**: Sort by creation date, title, or update date
-- **User Data Isolation**: Users only see their own tasks
-- **Responsive Design**: Mobile-friendly interface with Tailwind CSS
+---
 
-## 🛠️ Tech Stack
-
-### Frontend
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS with Calm Productivity theme
-- **State Management**: React Context API
-- **HTTP Client**: Fetch API with custom error handling
-- **Voice Integration**: Web Speech API
-- **Multi-language**: Urdu/English support
-
-### Backend
-- **Framework**: FastAPI
-- **ORM**: SQLModel
-- **Database**: PostgreSQL (Neon)
-- **Authentication**: Better Auth with JWT tokens
-- **Password Hashing**: bcrypt
-- **AI Integration**: OpenAI Agents SDK
-- **MCP Protocol**: Model Context Protocol for tool integration
-- **Natural Language Processing**: MCP tools for task operations
-
-## 📁 Project Structure
+## 🏗️ Architecture
 
 ```
-phase3-ai-chatbot/
-├── frontend/
-│   ├── app/                       # Next.js pages
-│   │   ├── chat/                  # AI Chatbot interface
-│   │   ├── login/                 # Login page
-│   │   ├── signup/                # Signup page
-│   │   └── layout.tsx             # Root layout
-│   ├── components/                # Reusable components
-│   │   └── ChatBot.tsx            # AI Chatbot component
-│   ├── context/                   # React Context
-│   │   └── AuthContext.tsx        # Auth state management
-│   └── lib/                       # Utilities
-│       └── api.ts                 # API client
-├── backend/
-│   ├── main.py                    # FastAPI app entry
-│   ├── models.py                  # Database models
-│   ├── db.py                      # Database connection
-│   ├── auth.py                    # JWT verification
-│   ├── mcp_server/                # Model Context Protocol server
-│   │   ├── server.py              # MCP protocol implementation
-│   │   ├── tools.py               # MCP task operation tools
-│   │   └── mcp_agent.config.yaml  # MCP agent configuration
-│   └── routes/
-│       ├── auth.py                # Auth endpoints
-│       ├── tasks.py               # Task endpoints
-│       └── chat.py                # AI Chatbot endpoints
-├── specs/                         # Project specifications (Spec-Driven Development)
-│   ├── constitution.md            # Project constitution and principles
-│   ├── overview.md                # Project overview
-│   ├── features/                  # Feature specifications
-│   ├── api/                       # API specifications
-│   ├── database/                  # Database schema specifications
-│   ├── task-crud/                 # Task CRUD implementation specs
-│   └── ai-chatbot/                # AI Chatbot specifications
-│       ├── spec.md                # AI Chatbot feature specification
-│       ├── plan.md                # AI Chatbot implementation plan
-│       └── tasks.md               # AI Chatbot development tasks
-├── .claude/                       # Claude AI configuration and reusable skills
-│   ├── commands/                  # Custom Claude commands
-│   └── skills/                    # Reusable skills and components
-└── README.md                      # Project documentation
+┌─────────────────┐     ┌──────────────────────────────────────────────┐     ┌─────────────────┐
+│                 │     │              FastAPI Server                   │     │                 │
+│                 │     │  ┌────────────────────────────────────────┐  │     │                 │
+│  ChatKit UI     │────▶│  │         Chat Endpoint                  │  │     │    Neon DB      │
+│  (Frontend)     │     │  │  POST /api/{user_id}/chat              │  │     │  (PostgreSQL)   │
+│                 │     │  └───────────────┬────────────────────────┘  │     │                 │
+│                 │     │                  │                           │     │  - tasks        │
+│                 │     │                  ▼                           │     │  - conversations│
+│                 │     │  ┌────────────────────────────────────────┐  │     │  - messages     │
+│                 │◀────│  │      OpenAI Agents SDK                 │  │     │                 │
+│                 │     │  │      (Agent + Runner)                  │  │     │                 │
+│                 │     │  └───────────────┬────────────────────────┘  │     │                 │
+│                 │     │                  │                           │     │                 │
+│                 │     │                  ▼                           │     │                 │
+│                 │     │  ┌────────────────────────────────────────┐  │────▶│                 │
+│                 │     │  │         MCP Server (Port 8001)         │  │     │                 │
+│                 │     │  │  (MCP Tools for Task Operations)       │  │◀────│                 │
+│                 │     │  └────────────────────────────────────────┘  │     │                 │
+└─────────────────┘     └──────────────────────────────────────────────┘     └─────────────────┘
 ```
 
-## 🚀 Getting Started
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
+- Python 3.12+
+- Node.js 18+
+- PostgreSQL (Neon recommended)
+- OpenAI API key
 
-- Python 3.8+
-- Node.js 16+
-- PostgreSQL database (or use Neon)
-
-### Backend Setup
-
+### 1. Backend Setup
 ```bash
-# Navigate to backend
 cd backend
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Start the server
-uvicorn main:app --reload --port 8000
+# Create .env file:
+DATABASE_URL=<your_neon_postgres_url>
+OPENAI_API_KEY=<your_openai_key>
+BETTER_AUTH_SECRET=<any_secret_key>
+
+# Start backend (auto-starts MCP server on 8001)
+uvicorn main:app --reload
 ```
 
-Backend runs on: **http://localhost:8000**
+**Servers Started:**
+- ✅ FastAPI Backend: http://localhost:8000
+- ✅ MCP Server: http://localhost:8001 (auto-started)
 
-### Frontend Setup
-
+### 2. Frontend Setup
 ```bash
-# Navigate to frontend
-cd frontend/temp_next_app
+cd frontend
 
 # Install dependencies
 npm install
 
-# Start development server
+# Create .env.local:
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Start frontend
 npm run dev
 ```
 
-Frontend runs on: **http://localhost:3000**
+**Frontend:** http://localhost:3000
 
-### Environment Variables
-
-Create a `.env` file in the backend directory:
-
-```env
-DATABASE_URL=your_postgresql_connection_string
-BETTER_AUTH_SECRET=your_secret_key_here
-OPENAI_API_KEY=your_openai_api_key_here  # For AI chatbot functionality
+### 3. Port Configuration
 ```
+Frontend:     Port 3000  (Next.js)
+Backend API:  Port 8000  (FastAPI)
+MCP Server:   Port 8001  (HTTP-based MCP tools)
+```
+
+---
+
+## 🔧 MCP Tools (5 Tools)
+
+| Tool | Purpose | Parameters |
+|------|---------|------------|
+| `add_task` | Create new task | user_id, title, description? |
+| `list_tasks` | Get tasks | user_id, status? |
+| `complete_task` | Mark complete | user_id, task_id |
+| `delete_task` | Remove task | user_id, task_id |
+| `update_task` | Modify task | user_id, task_id, title?, description? |
+
+---
+
+## 💬 Natural Language Commands
+
+| User Says | Agent Action |
+|-----------|--------------|
+| "Add a task to buy groceries" | `add_task` |
+| "Show me all my tasks" | `list_tasks` |
+| "Mark task 3 as complete" | `complete_task` |
+| "Delete the meeting task" | `list_tasks` → `delete_task` |
+| "Change task 1 to 'Call mom'" | `update_task` |
+
+### Urdu Commands (اردو)
+```
+"میرے کام دکھائیں" → list_tasks
+"گروسری کا کام شامل کریں" → add_task
+"کام نمبر 1 مکمل کریں" → complete_task
+```
+
+---
 
 ## 📝 API Endpoints
 
-### Authentication
-- `POST /auth/signup` - Create new user account
-- `POST /auth/login` - Login with credentials
-- `GET /auth/me` - Get current user info
+### Authentication (Better Auth)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/signup` | Create account |
+| POST | `/auth/login` | Login (JWT) |
+| GET | `/auth/me` | Current user |
 
-### Tasks (Authenticated)
-- `GET /api/{user_id}/tasks` - List all tasks (with filters)
-- `POST /api/{user_id}/tasks` - Create new task
-- `GET /api/{user_id}/tasks/{id}` - Get specific task
-- `PUT /api/{user_id}/tasks/{id}` - Update task
-- `DELETE /api/{user_id}/tasks/{id}` - Delete task
-- `PATCH /api/{user_id}/tasks/{id}/complete` - Toggle completion
+### Tasks
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/{user_id}/tasks` | List tasks |
+| POST | `/api/{user_id}/tasks` | Create task |
+| PUT | `/api/{user_id}/tasks/{id}` | Update task |
+| DELETE | `/api/{user_id}/tasks/{id}` | Delete task |
+| PATCH | `/api/{user_id}/tasks/{id}/complete` | Toggle complete |
 
-### AI Chatbot (Authenticated)
-- `POST /api/{user_id}/chat` - Chat with AI assistant using natural language
-- Supports multi-language (English/Urdu) processing
-- Handles voice command processing
-- MCP tool integration for task operations
+### Chat
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/{user_id}/chat` | AI chat message |
 
-## 🎯 User Flow
+---
 
-1. **New User**:
-   - Lands on homepage
-   - Clicks "Get Started"
-   - Signs up with email/password (min 8 chars)
-   - Automatically logged in
-   - Redirected to tasks dashboard or AI chatbot
+## 📊 Database Models
 
-2. **Returning User**:
-   - Lands on homepage
-   - Clicks "Sign In"
-   - Logs in with credentials
-   - Redirected to tasks dashboard or AI chatbot
+| Model | Fields |
+|-------|--------|
+| Task | user_id, id, title, description, completed, created_at, updated_at |
+| Conversation | user_id, id, created_at, updated_at |
+| Message | user_id, id, conversation_id, role, content, created_at |
 
-3. **Authenticated User**:
-   - Visiting `/`, `/login`, or `/signup` automatically redirects to `/tasks`
-   - Can access `/chat` for AI-powered task management
-   - Interact with chatbot using natural language, voice commands, or text
-
-4. **AI Chatbot Interaction**:
-   - Navigate to `/chat` to access the AI assistant
-   - Use natural language to manage tasks (e.g., "Add a task to buy groceries")
-   - Switch between English and Urdu languages
-   - Use voice commands for hands-free task management
-
-## 🔒 Security Features
-
-- Better Auth-based authentication with JWT tokens
-- Bcrypt password hashing (cost factor 12)
-- User data isolation at API level
-- CORS protection
-- Input validation (frontend + backend)
-
-## ✨ Phase 3 Highlights
-
-### Before Phase 3
-- ❌ Limited to manual task entry via forms
-- ❌ English-only interface
-- ❌ No voice command support
-- ❌ Basic text-based interaction
-
-### After Phase 3
-- ✅ Natural language task management with AI assistance
-- ✅ Multi-language support (English/Urdu)
-- ✅ Voice command functionality for hands-free task management
-- ✅ MCP protocol integration for standardized AI tool interactions
-- ✅ Calm Productivity visual theme with dark mode
-- ✅ Enhanced conversational experience
-- ✅ Intelligent task processing via OpenAI integration
-- ✅ MCP tools for reliable task operations
+---
 
 ## 🧪 Testing
 
-Create a test user:
+### Test User
 ```
 Email: test@example.com
 Password: password123
 Name: Test User
 ```
 
+### Health Checks
+```bash
+curl http://localhost:8000/
+curl http://localhost:8001/health
+curl http://localhost:8001/mcp/tools
+```
+
+---
+
+## 🔑 Environment Variables
+
+### Backend (.env)
+```
+DATABASE_URL=postgresql://user:pass@host/db
+OPENAI_API_KEY=sk-proj-...
+BETTER_AUTH_SECRET=random_secret_key
+```
+
+### Frontend (.env.local)
+```
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+---
+
+## 🎯 Key Features
+
+- ✅ AI-powered task management via natural language
+- ✅ OpenAI Agents SDK with MCP tools
+- ✅ Stateless architecture (scalable)
+- ✅ Bilingual support (English + Urdu)
+- ✅ Voice commands (Web Speech API)
+- ✅ Database-persisted conversations
+- ✅ Better Auth with JWT tokens
+
+---
+
 ## 📄 License
 
 MIT License
 
-## 👨‍💻 Developer
-
-Built with ❤️ for Phase 3: AI-Powered Todo Chatbot
-
 ---
 
-**Note**: This is a full-stack AI-powered application demonstrating modern web technologies with natural language processing.
+**Full-stack AI-powered Todo Application** with Natural Language Processing
+
+Built with FastAPI, OpenAI Agents SDK, MCP Protocol, and Next.js
