@@ -446,10 +446,17 @@ class AIChatbotAgent:
 
             # Regular command processing (not in task creation flow)
 
+            # Detect if message is in Urdu
+            is_urdu = any(ord(char) >= 0x0600 and ord(char) <= 0x06FF for char in message)
 
             # Fallback implementation - simple and clean approach
-            # Add task command
-            if any(word in message_lower for word in ["add", "create", "new", "remember", "make", "setup"]) and not any(word in message_lower for word in ["show", "list", "see", "what", "all"]):
+            # Add task command - English and Urdu keywords
+            add_keywords_en = ["add", "create", "new", "remember", "make", "setup"]
+            add_keywords_ur = ["شامل", "بنائیں", "نیا", "کام", "ٹاسک"]
+            show_keywords_en = ["show", "list", "see", "what", "all"]
+            show_keywords_ur = ["دکھائیں", "دکھاؤ", "بتائیں", "تمام", "میرے"]
+
+            if any(word in message_lower for word in add_keywords_en) or any(word in message for word in add_keywords_ur) and not any(word in message_lower for word in show_keywords_en) and not any(word in message for word in show_keywords_ur):
                 # Extract potential title after removing command words
                 potential_title = re.sub(r'^(add|create|new|remember|make|set|setup)', '', message_lower, 1, re.IGNORECASE).strip()
 
@@ -535,8 +542,12 @@ class AIChatbotAgent:
 
                     return "I understand you want to create a task! What would you like to name this task?", []
 
-            # List tasks command
-            elif any(word in message_lower for word in ["show", "list", "see", "what", "my", "all"]) and not any(word in message_lower for word in ["update", "change", "modify", "edit", "complete", "done", "finish", "mark", "delete", "remove", "cancel"]):
+            # List tasks command - English and Urdu
+            list_keywords_en = ["show", "list", "see", "what", "my", "all", "tasks"]
+            list_keywords_ur = ["دکھائیں", "دکھاؤ", "بتائیں", "تمام", "میرے", "کام"]
+            modify_keywords = ["update", "change", "modify", "edit", "complete", "done", "finish", "mark", "delete", "remove", "cancel", "اپڈیٹ", "مکمل", "حذف", "ڈیلیٹ"]
+
+            if (any(word in message_lower for word in list_keywords_en) or any(word in message for word in list_keywords_ur)) and not any(word in message_lower for word in modify_keywords) and not any(word in message for word in modify_keywords):
                 status = None
                 if "pending" in message_lower or "incomplete" in message_lower:
                     status = "pending"
@@ -558,23 +569,38 @@ class AIChatbotAgent:
                     if tasks:
                         task_list = []
                         for task in tasks:
-                            task_info = f"'{task.title}' (ID: {task.id})"
-                            if task.completed:
-                                task_info += " [COMPLETED]"
+                            if is_urdu:
+                                task_info = f"'{task.title}' (آئی ڈی: {task.id})"
+                                if task.completed:
+                                    task_info += " [مکمل]"
+                            else:
+                                task_info = f"'{task.title}' (ID: {task.id})"
+                                if task.completed:
+                                    task_info += " [COMPLETED]"
                             task_list.append(task_info)
 
                         # Format tasks with each on a new line for better readability
                         formatted_tasks = "\n".join([f"{i+1}. {task}" for i, task in enumerate(task_list)])
-                        status_text = f" {status}" if status else " all"
-                        # Using double newline to ensure separation in chat interface
-                        return f"Here are your{status_text} tasks:\n\n{formatted_tasks}", [
-                            {"tool_name": "list_tasks", "parameters": {"user_id": user_id, "status": status}}
-                        ]
+
+                        if is_urdu:
+                            return f"یہ رہے آپ کے کام:\n\n{formatted_tasks}", [
+                                {"tool_name": "list_tasks", "parameters": {"user_id": user_id, "status": status}}
+                            ]
+                        else:
+                            status_text = f" {status}" if status else " all"
+                            return f"Here are your{status_text} tasks:\n\n{formatted_tasks}", [
+                                {"tool_name": "list_tasks", "parameters": {"user_id": user_id, "status": status}}
+                            ]
                     else:
-                        status_text = f" {status}" if status else " all"
-                        return f"You don't have any{status_text} tasks.", [
-                            {"tool_name": "list_tasks", "parameters": {"user_id": user_id, "status": status}}
-                        ]
+                        if is_urdu:
+                            return "آپ کے پاس ابھی کوئی کام نہیں ہے۔", [
+                                {"tool_name": "list_tasks", "parameters": {"user_id": user_id, "status": status}}
+                            ]
+                        else:
+                            status_text = f" {status}" if status else " all"
+                            return f"You don't have any{status_text} tasks.", [
+                                {"tool_name": "list_tasks", "parameters": {"user_id": user_id, "status": status}}
+                            ]
                 except Exception as e:
                     return f"Error listing tasks: {str(e)}", []
 
@@ -590,8 +616,11 @@ class AIChatbotAgent:
                 return f"I understand you want to delete a task. Could you please specify which task you'd like to delete?", []
 
             else:
-                # Default response
-                return "I understand you're trying to interact with your tasks. You can ask me to add, list, complete, delete, or update tasks.", []
+                # Default response - bilingual
+                if is_urdu:
+                    return "میں سمجھتا ہوں آپ اپنے کاموں کے بارے میں بات کر رہے ہیں۔ آپ مجھ سے کام شامل کرنے، دکھانے، مکمل کرنے، حذف کرنے، یا اپڈیٹ کرنے کے لیے کہہ سکتے ہیں۔", []
+                else:
+                    return "I understand you're trying to interact with your tasks. You can ask me to add, list, complete, delete, or update tasks.", []
 
         except Exception as e:
             return f"Error processing your request: {str(e)}", []
