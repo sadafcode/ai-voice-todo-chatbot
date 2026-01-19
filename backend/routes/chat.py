@@ -19,12 +19,10 @@ from auth import get_current_user
 # Keys are conversation_id + user_id, values are dictionaries storing task creation state
 conversation_state = {}
 
-# Import OpenAI Agents SDK and MCP integration
+# Import OpenAI Agents SDK (without mcp-agent dependency)
 OPENAI_AGENTS_AVAILABLE = False
 try:
-    from agents_mcp import Agent, RunnerContext
-    from agents import Runner, function_tool
-    import httpx
+    from agents import Agent, Runner, function_tool
     OPENAI_AGENTS_AVAILABLE = True
     print("SUCCESS: OpenAI Agents SDK imported successfully!")
 except ImportError as e:
@@ -291,8 +289,7 @@ class AIChatbotAgent:
 
             result = await runner_instance.run(
                 starting_agent=agent,
-                input=message,
-                context=RunnerContext()
+                input=message
             )
 
             print(f"DEBUG: Agent run completed successfully!")
