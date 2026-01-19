@@ -20,16 +20,20 @@ from auth import get_current_user
 conversation_state = {}
 
 # Import OpenAI Agents SDK and MCP integration
+OPENAI_AGENTS_AVAILABLE = False
 try:
     from agents_mcp import Agent, RunnerContext
     from agents import Runner, function_tool
     import httpx
     OPENAI_AGENTS_AVAILABLE = True
+    print("SUCCESS: OpenAI Agents SDK imported successfully!")
 except ImportError as e:
     OPENAI_AGENTS_AVAILABLE = False
-    # Fallback implementation will be used
-    print(f"Warning: OpenAI Agents SDK not available: {e}")
-    print("Falling back to NLU processing")
+    print(f"ERROR: OpenAI Agents SDK import failed: {e}")
+    print("Will use fallback NLU processing")
+except Exception as e:
+    OPENAI_AGENTS_AVAILABLE = False
+    print(f"ERROR: Unexpected error importing OpenAI Agents SDK: {e}")
 
 # Import MCP client wrapper for tool calls
 from mcp_client_wrapper import MCP_TOOL_FUNCTIONS
@@ -76,20 +80,28 @@ class AIChatbotAgent:
         """
         Process a user message and return AI response with tool calls
         """
+        print(f"=== PROCESS_MESSAGE START ===")
+        print(f"Message: {message}")
+        print(f"User ID: {user_id}")
+        print(f"OPENAI_AGENTS_AVAILABLE: {OPENAI_AGENTS_AVAILABLE}")
+
         # Get conversation history for context
         history = self._get_conversation_history(conversation_id)
 
         # Process with OpenAI Agents SDK if available, otherwise use fallback
         if OPENAI_AGENTS_AVAILABLE:
+            print(">>> Using OpenAI Agents SDK")
             response_text, tool_calls = await self._process_with_openai_agents(
                 message, user_id, history
             )
         else:
+            print(">>> Using Fallback NLU (OpenAI Agents not available)")
             # Fallback implementation
             response_text, tool_calls = await self._process_natural_language_command(
                 message, user_id, history
             )
 
+        print(f"=== PROCESS_MESSAGE END ===")
         return response_text, tool_calls
 
     async def _process_with_openai_agents(
