@@ -1,82 +1,76 @@
 """
 MCP Client Wrapper
-Provides functions that call the MCP server via HTTP and can be used as agent tools
+Provides functions that call MCP tools directly (no HTTP needed since integrated)
 """
-import os
-import httpx
+import sys
+from pathlib import Path
 from typing import Dict, Any, Optional
 
+# Add backend directory to path for imports
+backend_dir = Path(__file__).parent
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
 
-# Use environment variable or default to local development port
-# In production (HF Spaces), MCP endpoints are integrated into main app on same port
-MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "http://127.0.0.1:8001")
+# Import MCP tools directly
+import importlib.util
+tools_path = backend_dir / "mcp-server" / "tools.py"
+spec = importlib.util.spec_from_file_location("mcp_tools", tools_path)
+tools_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(tools_module)
 
-
-async def call_mcp_tool(tool_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Call an MCP tool via HTTP and return the result
-    """
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        try:
-            response = await client.post(
-                f"{MCP_SERVER_URL}/mcp/call",
-                json={
-                    "tool_name": tool_name,
-                    "parameters": parameters
-                }
-            )
-            response.raise_for_status()
-            data = response.json()
-
-            if data.get("error"):
-                raise ValueError(f"MCP tool error: {data['error']}")
-
-            return data.get("result", {})
-
-        except httpx.HTTPError as e:
-            raise Exception(f"HTTP error calling MCP tool {tool_name}: {str(e)}")
-        except Exception as e:
-            raise Exception(f"Error calling MCP tool {tool_name}: {str(e)}")
+# Import tool functions and input models directly
+_add_task = tools_module.add_task
+_list_tasks = tools_module.list_tasks
+_complete_task = tools_module.complete_task
+_delete_task = tools_module.delete_task
+_update_task = tools_module.update_task
+AddTaskInput = tools_module.AddTaskInput
+ListTasksInput = tools_module.ListTasksInput
+CompleteTaskInput = tools_module.CompleteTaskInput
+DeleteTaskInput = tools_module.DeleteTaskInput
+UpdateTaskInput = tools_module.UpdateTaskInput
 
 
 # Tool wrapper functions that the Agent can use
 async def add_task_tool(user_id: str, title: str, description: Optional[str] = None) -> Dict[str, Any]:
-    """Create a new task"""
-    parameters = {
-        "user_id": user_id,
-        "title": title
-    }
-    if description:
-        parameters["description"] = description
-
-    return await call_mcp_tool("add_task", parameters)
+    """Create a new task for the user"""
+    input_data = AddTaskInput(
+        user_id=user_id,
+        title=title,
+        description=description
+    )
+    result = await _add_task(input_data)
+    return result.model_dump() if hasattr(result, 'model_dump') else result.dict()
 
 
 async def list_tasks_tool(user_id: str, status: Optional[str] = None) -> Dict[str, Any]:
-    """List tasks with optional status filter"""
-    parameters = {"user_id": user_id}
-    if status:
-        parameters["status"] = status
-
-    return await call_mcp_tool("list_tasks", parameters)
+    """List all tasks for the user with optional status filter"""
+    input_data = ListTasksInput(
+        user_id=user_id,
+        status=status
+    )
+    result = await _list_tasks(input_data)
+    return result.model_dump() if hasattr(result, 'model_dump') else result.dict()
 
 
 async def complete_task_tool(user_id: str, task_id: int) -> Dict[str, Any]:
     """Mark a task as complete"""
-    parameters = {
-        "user_id": user_id,
-        "task_id": task_id
-    }
-    return await call_mcp_tool("complete_task", parameters)
+    input_data = CompleteTaskInput(
+        user_id=user_id,
+        task_id=task_id
+    )
+    result = await _complete_task(input_data)
+    return result.model_dump() if hasattr(result, 'model_dump') else result.dict()
 
 
 async def delete_task_tool(user_id: str, task_id: int) -> Dict[str, Any]:
-    """Delete a task"""
-    parameters = {
-        "user_id": user_id,
-        "task_id": task_id
-    }
-    return await call_mcp_tool("delete_task", parameters)
+    """Delete a task from the list"""
+    input_data = DeleteTaskInput(
+        user_id=user_id,
+        task_id=task_id
+    )
+    result = await _delete_task(input_data)
+    return result.model_dump() if hasattr(result, 'model_dump') else result.dict()
 
 
 async def update_task_tool(
@@ -86,16 +80,14 @@ async def update_task_tool(
     description: Optional[str] = None
 ) -> Dict[str, Any]:
     """Update a task's title and/or description"""
-    parameters = {
-        "user_id": user_id,
-        "task_id": task_id
-    }
-    if title is not None:
-        parameters["title"] = title
-    if description is not None:
-        parameters["description"] = description
-
-    return await call_mcp_tool("update_task", parameters)
+    input_data = UpdateTaskInput(
+        user_id=user_id,
+        task_id=task_id,
+        title=title,
+        description=description
+    )
+    result = await _update_task(input_data)
+    return result.model_dump() if hasattr(result, 'model_dump') else result.dict()
 
 
 # Dictionary mapping tool names to functions
