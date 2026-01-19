@@ -158,12 +158,17 @@ class AIChatbotAgent:
 
             # MCP tools are now directly imported - no HTTP calls needed
             print("DEBUG: MCP tools loaded directly (no HTTP)")
+            print(f"DEBUG: Available MCP tools: {list(MCP_TOOL_FUNCTIONS.keys())}")
 
             # Convert MCP wrapper functions to agent tools
-            # These functions make HTTP calls to the MCP server
             mcp_tools = []
             for tool_name, tool_func in MCP_TOOL_FUNCTIONS.items():
-                mcp_tools.append(function_tool(tool_func))
+                try:
+                    wrapped_tool = function_tool(tool_func)
+                    mcp_tools.append(wrapped_tool)
+                    print(f"DEBUG: Wrapped tool '{tool_name}' successfully")
+                except Exception as tool_error:
+                    print(f"ERROR: Failed to wrap tool '{tool_name}': {tool_error}")
 
             print(f"DEBUG: Created {len(mcp_tools)} MCP tools for agent")
 
@@ -270,6 +275,7 @@ class AIChatbotAgent:
         try:
             runner_instance = Runner()
             print(f"DEBUG: Running agent with message: {message}")
+            print(f"DEBUG: User ID for tools: {user_id}")
 
             result = await runner_instance.run(
                 starting_agent=agent,
@@ -277,7 +283,8 @@ class AIChatbotAgent:
                 context=RunnerContext()
             )
 
-            print(f"DEBUG: Agent run completed. Result type: {type(result)}")
+            print(f"DEBUG: Agent run completed successfully!")
+            print(f"DEBUG: Result type: {type(result)}")
 
             # Extract the response from RunResult.final_output
             response_text = None
