@@ -2,11 +2,14 @@
 MCP Client Wrapper
 Provides functions that call the MCP server via HTTP and can be used as agent tools
 """
+import os
 import httpx
 from typing import Dict, Any, Optional
 
 
-MCP_SERVER_URL = "http://127.0.0.1:8001"
+# Use environment variable or default to local development port
+# In production (HF Spaces), MCP endpoints are integrated into main app on same port
+MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "http://127.0.0.1:8001")
 
 
 async def call_mcp_tool(tool_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:

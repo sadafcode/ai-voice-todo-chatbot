@@ -156,20 +156,25 @@ class AIChatbotAgent:
 
             print(f"DEBUG: OpenAI API key is set (length: {len(openai_key)})")
 
-            # Check if MCP server is running by testing health endpoint
+            # MCP endpoints are now integrated into main app - no separate health check needed
+            # Check if running locally (8001) or production (integrated)
+            mcp_base_url = os.getenv("MCP_SERVER_URL", "http://127.0.0.1:8001")
             try:
                 async with httpx.AsyncClient(timeout=5.0) as client:
-                    health_response = await client.get("http://127.0.0.1:8001/health")
-                    if health_response.status_code == 200:
-                        print("DEBUG: MCP server is healthy")
-                    else:
-                        print(f"WARNING: MCP server health check returned {health_response.status_code}")
-                        print("Falling back to NLU processing")
-                        return await self._process_natural_language_command(message, user_id, history_messages)
+                    # Try integrated endpoint first (same server)
+                    try:
+                        health_response = await client.get(f"{mcp_base_url}/health")
+                        if health_response.status_code == 200:
+                            print(f"DEBUG: MCP server is healthy at {mcp_base_url}")
+                    except:
+                        # Try local development port
+                        health_response = await client.get("http://127.0.0.1:8001/health")
+                        if health_response.status_code == 200:
+                            print("DEBUG: MCP server is healthy (port 8001)")
+                            mcp_base_url = "http://127.0.0.1:8001"
             except Exception as e:
-                print(f"ERROR: MCP server not reachable: {e}")
-                print("Falling back to NLU processing")
-                return await self._process_natural_language_command(message, user_id, history_messages)
+                print(f"WARNING: MCP health check failed: {e}")
+                print("Continuing with agent - MCP tools may still work via integrated endpoints")
 
             # Convert MCP wrapper functions to agent tools
             # These functions make HTTP calls to the MCP server
